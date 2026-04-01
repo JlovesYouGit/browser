@@ -1,7 +1,7 @@
 <template>
-  <div class="browser-chrome relative z-10 w-[90%] max-w-[1400px] h-[85vh] flex flex-col bg-[#1a1a1a] rounded-[10px] border border-[#2a2a2a] shadow-[0_20px_60px_rgba(0,0,0,0.5)]">
+  <div class="browser-chrome relative z-10 w-[90%] max-w-[1400px] h-[85vh] flex flex-col bg-[#1a1a1a]/80 backdrop-blur-md rounded-[10px] border border-[#2a2a2a] shadow-[0_20px_60px_rgba(0,0,0,0.5)] overflow-hidden pointer-events-none">
     <!-- Top Bar / Browser Chrome -->
-    <div class="flex items-center justify-between px-5 py-4 border-b border-[#252525]">
+    <div class="flex items-center justify-between px-5 py-4 border-b border-[#252525] pointer-events-auto bg-[#1a1a1a]">
       <!-- Left: Window Controls -->
       <div class="flex items-center gap-2">
         <div class="window-control window-control-close" @click="onClose" />
@@ -34,12 +34,11 @@
     </div>
 
       <!-- Main Content Area -->
-      <div class="flex-1 bg-[#141414] overflow-hidden relative" ref="containerRef">
-        <!-- WebView Placeholder/Sync Target -->
-        <div ref="webviewRef" class="w-full h-full" />
+      <div class="flex-1 overflow-hidden relative pointer-events-none" ref="containerRef">
+        <!-- WebView Placeholder/Sync Target (Transparent Hole) -->
+        <div ref="webviewRef" class="w-full h-full bg-transparent" />
         
-        <!-- Glass Chat Box (Overlay or Side - based on user preference) -->
-        <!-- For now keeping it as a centered overlay as per original design -->
+        <!-- Glass Chat Box (Overlay) -->
         <div class="absolute inset-0 z-10 pointer-events-none flex items-center justify-center px-8">
           <div class="pointer-events-auto">
             <GlassChatBox />

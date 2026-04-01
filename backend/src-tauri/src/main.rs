@@ -275,6 +275,36 @@ fn main() {
             }
             Ok(())
         })
+        // The artifact protocol for loading local AI-generated artifacts
+        // artifact://localhost/path/to/file -> maps to {workspace}/artifacts/path/to/file
+        .register_uri_scheme_protocol("artifact", |_app, request| {
+            let path = request.uri().path();
+            
+            // In a real app, we'd use the actual workspace path
+            // For now, mapping to a relative artifacts directory
+            let artifact_path = std::path::Path::new("05_reports/artifacts").join(path.trim_start_matches('/'));
+            
+            match std::fs::read(&artifact_path) {
+                Ok(data) => {
+                    let mime_type = if path.ends_with(".html") { "text/html" }
+                                    else if path.ends_with(".js") { "application/javascript" }
+                                    else if path.ends_with(".css") { "text/css" }
+                                    else { "application/octet-stream" };
+                    
+                    tauri::http::Response::builder()
+                        .header("Content-Type", mime_type)
+                        .header("Access-Control-Allow-Origin", "*")
+                        .body(data)
+                        .unwrap()
+                }
+                Err(_) => {
+                    tauri::http::Response::builder()
+                        .status(404)
+                        .body(Vec::<u8>::new())
+                        .unwrap()
+                }
+            }
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

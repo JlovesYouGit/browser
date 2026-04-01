@@ -1,12 +1,61 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="landing-visible">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Agentic Browser</title>
+    <style>
+      .landing-visible body { overflow: hidden; }
+      #landing {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        background: radial-gradient(ellipse at center, rgba(30, 30, 30, 1) 0%, rgba(10, 10, 10, 1) 100%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        transition: opacity 0.5s ease-out;
+      }
+      .landing-visible #app { display: none; }
+      .fade-out { opacity: 0; pointer-events: none; }
+    </style>
+    <script>
+      window.addEventListener('vue-ready', () => {
+        const landing = document.getElementById('landing');
+        if (landing) {
+          landing.classList.add('fade-out');
+          setTimeout(() => {
+            document.documentElement.classList.remove('landing-visible');
+            document.getElementById('app').style.display = 'block';
+            landing.remove();
+          }, 500);
+        }
+      });
+    </script>
   </head>
   <body>
+    <!-- Static Landing Page -->
+    <div id="landing">
+      <div class="flex flex-col items-center gap-6">
+        <h1 style="font-size: 3rem; font-weight: 200; letter-spacing: -0.05em;">Agentic Browser</h1>
+        <p style="color: #6b6b6b; font-size: 1.1rem;">Initializing neural engine...</p>
+        <div style="width: 200px; height: 1px; background: rgba(255,255,255,0.1); position: relative; overflow: hidden;">
+          <div style="position: absolute; height: 100%; background: #007aff; width: 50%; left: -50%; animation: slide 2s infinite linear;"></div>
+        </div>
+      </div>
+    </div>
+
+    <style>
+      @keyframes slide {
+        from { left: -50%; }
+        to { left: 100%; }
+      }
+    </style>
+
     <div id="app"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>

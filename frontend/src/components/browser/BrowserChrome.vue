@@ -1,686 +1,357 @@
 <template>
-  <div class="browser-chrome">
-    <!-- Browser Frame with macOS-style traffic light buttons -->
-    <div class="browser-frame">
-      <!-- Title bar with traffic lights -->
-      <div class="title-bar">
-        <!-- Address Bar -->
-        <div class="address-bar">
-          <div class="address-input-wrapper">
-            <input
-              v-model="urlInput"
-              type="text"
-              class="address-input"
-              placeholder="Search or enter address"
-              @keydown.enter="navigateToUrl"
-            />
-            <button class="navigate-btn" @click="navigateToUrl">
-              <ArrowRight class="w-4 h-4" />
-            </button>
+  <div class="browser-chrome relative z-10 w-[90%] max-w-[1400px] h-[85vh] flex flex-col bg-[#1a1a1a] rounded-[10px] border border-[#2a2a2a] shadow-[0_20px_60px_rgba(0,0,0,0.5)]">
+    <!-- Top Bar / Browser Chrome -->
+    <div class="flex items-center justify-between px-5 py-4 border-b border-[#252525]">
+      <!-- Left: Window Controls -->
+      <div class="flex items-center gap-2">
+        <div class="window-control window-control-close" @click="onClose" />
+        <div class="window-control window-control-minimize" @click="onMinimize" />
+        <div class="window-control window-control-maximize" @click="onMaximize" />
+      </div>
+
+      <!-- Center: Address Bar -->
+      <div class="flex-1 max-w-[600px] mx-8">
+        <div class="address-bar flex items-center gap-3 bg-[#252525] rounded-full px-4 py-2.5 border border-[#2f2f2f]">
+          <LockIcon class="w-3.5 h-3.5 text-[#6b6b6b]" :stroke-width="2" />
+          <input
+            type="text"
+            v-model="urlInput"
+            @keyup.enter="navigateToUrl"
+            class="address-input flex-1 bg-transparent text-[#a0a0a0] text-sm outline-none font-normal"
+          />
+          <div class="flex items-center gap-2">
+            <RotateCwIcon class="w-3.5 h-3.5 text-[#6b6b6b]" :stroke-width="2" />
+            <StarIcon class="w-3.5 h-3.5 text-[#6b6b6b]" :stroke-width="2" />
           </div>
-        </div>
-        
-        <!-- Navigation Controls -->
-        <div class="nav-controls">
-          <button class="nav-btn" :disabled="!canGoBack" @click="goBack">
-            <ChevronLeft class="w-4 h-4" />
-          </button>
-          <button class="nav-btn" :disabled="!canGoForward" @click="goForward">
-            <ChevronRight class="w-4 h-4" />
-          </button>
-          <button class="nav-btn" @click="refresh">
-            <RotateCw class="w-4 h-4" />
-          </button>
-          <!-- AI Chat Toggle -->
-          <button 
-            class="nav-btn ai-btn" 
-            :class="{ active: showChatPanel }"
-            @click="toggleChatPanel"
-          >
-            <Sparkles class="w-4 h-4" />
-          </button>
         </div>
       </div>
-      
-      <!-- Main Content Area -->
-      <div class="content-area">
-        <!-- WebView Container -->
-        <div class="webview-container" :class="{ 'chat-open': showChatPanel }">
-          <div ref="webviewRef" class="webview" />
-          
-          <!-- Loading Indicator -->
-          <div v-if="isLoading" class="loading-bar">
-            <div class="loading-progress" />
-          </div>
-        </div>
-        
-        <!-- AI Chat Panel -->
-        <Transition name="slide">
-          <div v-if="showChatPanel" class="chat-panel">
-            <div class="chat-header">
-              <div class="chat-title">
-                <Sparkles class="w-4 h-4" />
-                <span>AI Assistant</span>
-              </div>
-              <button class="close-chat" @click="toggleChatPanel">
-                <X class="w-4 h-4" />
-              </button>
-            </div>
-            
-            <!-- API Key Warning -->
-            <div v-if="!hasApiKey" class="api-warning">
-              <p>Configure your Gemini API key to use AI features</p>
-              <button class="setup-btn" @click="showApiSettings = true">Setup</button>
-            </div>
-            
-            <!-- Chat Messages -->
-            <div v-else class="chat-messages" ref="messagesRef">
-              <div 
-                v-for="(msg, idx) in chatMessages" 
-                :key="idx"
-                class="message"
-                :class="msg.role"
-              >
-                <div class="message-content">{{ msg.content }}</div>
-                <div v-if="msg.actions?.length" class="message-actions">
-                  <span v-for="action in msg.actions" :key="action" class="action-tag">
-                    {{ action }}
-                  </span>
-                </div>
-              </div>
-              <div v-if="isAiThinking" class="message model thinking">
-                <div class="thinking-dots">
-                  <span></span><span></span><span></span>
-                </div>
-              </div>
-            </div>
-            
-            <!-- Chat Input -->
-            <div class="chat-input-container">
-              <GlassChatBox 
-                ref="chatInputRef"
-                placeholder="Ask me to browse, research, or summarize..."
-                @submit="handleChatSubmit"
-              />
-            </div>
-          </div>
-        </Transition>
+
+      <!-- Right: Menu Icons -->
+      <div class="flex items-center gap-4">
+        <MoreHorizontalIcon class="w-5 h-5 text-[#6b6b6b]" :stroke-width="1.5" />
+        <UserIcon class="w-5 h-5 text-[#6b6b6b]" :stroke-width="1.5" />
       </div>
     </div>
-    
-    <!-- API Settings Modal -->
-    <Transition name="fade">
-      <div v-if="showApiSettings" class="modal-overlay" @click="showApiSettings = false">
-        <div class="modal-content" @click.stop>
-          <ApiKeySettings @saved="onApiKeySaved" @removed="onApiKeyRemoved" />
+
+      <!-- Main Content Area -->
+      <div class="flex-1 bg-[#141414] overflow-hidden relative" ref="containerRef">
+        <!-- WebView Placeholder/Sync Target -->
+        <div ref="webviewRef" class="w-full h-full" />
+        
+        <!-- Glass Chat Box (Overlay or Side - based on user preference) -->
+        <!-- For now keeping it as a centered overlay as per original design -->
+        <div class="absolute inset-0 z-10 pointer-events-none flex items-center justify-center px-8">
+          <div class="pointer-events-auto">
+            <GlassChatBox />
+          </div>
         </div>
       </div>
-    </Transition>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, nextTick } from 'vue'
-import { getCurrentWindow } from '@tauri-apps/api/window'
-import { listen, type Event } from '@tauri-apps/api/event'
+import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { 
-  ArrowRight, ChevronLeft, ChevronRight, RotateCw, 
-  Sparkles, X 
+  Lock as LockIcon, RotateCw as RotateCwIcon, Star as StarIcon, 
+  MoreHorizontal as MoreHorizontalIcon, User as UserIcon 
 } from 'lucide-vue-next'
 import GlassChatBox from '@/components/ui/GlassChatBox.vue'
-import ApiKeySettings from '@/components/settings/ApiKeySettings.vue'
-import { 
-  navigate as tauriNavigate, hasApiKey as checkApiKey, initializeGemini, geminiChat,
-  type ChatMessage 
-} from '@/utils/tauri'
+import { invoke } from '@tauri-apps/api/core'
+import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 
-const props = defineProps<{
-  initialUrl?: string
-}>()
+const appWindow = getCurrentWebviewWindow()
 
-const urlInput = ref(props.initialUrl || 'https://www.google.com')
-const currentUrl = ref(props.initialUrl || 'https://www.google.com')
-const isLoading = ref(false)
-const canGoBack = ref(false)
-const canGoForward = ref(false)
-const webviewRef = ref<HTMLDivElement>()
-
-// Chat state
-const showChatPanel = ref(false)
-const hasApiKey = ref(false)
-const showApiSettings = ref(false)
-const chatMessages = ref<ChatMessage[]>([
-  { role: 'model', content: 'Hello! I\'m your AI browsing assistant. I can help you navigate, research, or summarize web pages. What would you like to do?' }
-])
-const isAiThinking = ref(false)
-const messagesRef = ref<HTMLDivElement>()
-const chatInputRef = ref<InstanceType<typeof GlassChatBox>>()
-
-// Toggle chat panel
-const toggleChatPanel = async () => {
-  showChatPanel.value = !showChatPanel.value
-  if (showChatPanel.value) {
-    // Check API key status
-    try {
-      hasApiKey.value = await checkApiKey()
-      if (hasApiKey.value) {
-        await initializeGemini()
-      }
-    } catch (e) {
-      console.error('Failed to check API key:', e)
-    }
-    
-    // Focus chat input
-    nextTick(() => {
-      chatInputRef.value?.focus()
-      scrollToBottom()
-    })
+const onClose = () => appWindow.close()
+const onMinimize = () => appWindow.minimize()
+const onMaximize = async () => {
+  const isMaximized = await appWindow.isMaximized()
+  if (isMaximized) {
+    await appWindow.unmaximize()
+  } else {
+    await appWindow.maximize()
   }
 }
 
-// Handle chat message submission
-const handleChatSubmit = async (message: string) => {
-  if (!message.trim() || isAiThinking.value) return
+// Component props interface
+interface BrowserChromeProps {
+  url?: string
+  title?: string
+  isLoading?: boolean
+}
+
+// Define props with TypeScript support
+const props = withDefaults(defineProps<BrowserChromeProps>(), {
+  url: 'https://yoursite.com',
+  title: 'Browser',
+  isLoading: false,
+})
+
+// Reactive state
+const urlInput = ref(props.url)
+const webviewRef = ref<HTMLDivElement | null>(null)
+const containerRef = ref<HTMLDivElement | null>(null)
+
+// Sync webview bounds with backend
+const syncWebviewBounds = async () => {
+  if (!webviewRef.value) return
   
-  // Add user message
-  chatMessages.value.push({ role: 'user', content: message })
-  isAiThinking.value = true
-  scrollToBottom()
-  
+  const rect = webviewRef.value.getBoundingClientRect()
   try {
-    // Call Gemini API
-    const response = await geminiChat(message, chatMessages.value.slice(0, -1))
-    
-    // Add AI response
-    chatMessages.value.push({ 
-      role: 'model', 
-      content: response.response,
-      actions: response.actions 
+    await invoke('resize_browser', {
+      x: rect.x,
+      y: rect.y,
+      width: rect.width,
+      height: rect.height
     })
-    
-    // Handle agentic actions
-    if (response.actions?.includes('navigate') && response.response.includes('http')) {
-      const urlMatch = response.response.match(/https?:\/\/[^\s]+/)
-      if (urlMatch) {
-        urlInput.value = urlMatch[0]
-        await navigateToUrl()
-      }
-    }
-  } catch (error) {
-    console.error('Chat error:', error)
-    chatMessages.value.push({ 
-      role: 'model', 
-      content: 'Sorry, I encountered an error. Please check your API key and try again.' 
-    })
-  } finally {
-    isAiThinking.value = false
-    scrollToBottom()
+  } catch (e) {
+    console.error('Failed to sync webview bounds:', e)
   }
 }
 
-const scrollToBottom = () => {
-  nextTick(() => {
-    if (messagesRef.value) {
-      messagesRef.value.scrollTop = messagesRef.value.scrollHeight
-    }
-  })
-}
-
-const onApiKeySaved = () => {
-  hasApiKey.value = true
-  showApiSettings.value = false
-  initializeGemini()
-}
-
-const onApiKeyRemoved = () => {
-  hasApiKey.value = false
-  showApiSettings.value = false
-}
-
-// Navigation functions
+// Navigation
 const navigateToUrl = async () => {
-  if (!urlInput.value) return
-  
   let url = urlInput.value
   if (!url.startsWith('http://') && !url.startsWith('https://')) {
     url = `https://${url}`
   }
-  
-  isLoading.value = true
-  currentUrl.value = url
-  
   try {
-    await tauriNavigate(url)
-  } catch (error) {
-    console.error('Navigation failed:', error)
-  } finally {
-    setTimeout(() => {
-      isLoading.value = false
-    }, 500)
+    await invoke('navigate', { url })
+  } catch (e) {
+    console.error('Navigation failed:', e)
   }
 }
 
-const goBack = async () => {
-  console.log('Go back')
-}
+let resizeObserver: ResizeObserver | null = null
 
-const goForward = async () => {
-  console.log('Go forward')
-}
-
-const refresh = async () => {
-  await navigateToUrl()
-}
-
-// Window controls
-const onClose = async () => {
-  const window = getCurrentWindow()
-  await window.close()
-}
-
-const onMinimize = async () => {
-  const window = getCurrentWindow()
-  await window.minimize()
-}
-
-const onMaximize = async () => {
-  const window = getCurrentWindow()
-  const isMaximized = await window.isMaximized()
-  if (isMaximized) {
-    await window.unmaximize()
-  } else {
-    await window.maximize()
-  }
-}
-
-// Listen for navigate events from Rust
-onMounted(() => {
-  if (props.initialUrl) {
-    navigateToUrl()
-  }
+onMounted(async () => {
+  await nextTick()
   
-  listen('navigate', (event: Event<string>) => {
-    if (event.payload) {
-      urlInput.value = event.payload as string
-      currentUrl.value = event.payload as string
+  if (webviewRef.value) {
+    const rect = webviewRef.value.getBoundingClientRect()
+    
+    // Create initial browser window/webview
+    try {
+      await invoke('create_browser_window', {
+        url: props.url,
+        x: rect.x,
+        y: rect.y,
+        width: rect.width,
+        height: rect.height
+      })
+    } catch (e) {
+      console.error('Failed to create browser webview:', e)
     }
-  })
-  
-  listen('screenshot', () => {
-    console.log('Screenshot requested')
-  })
+    
+    // Observe resizing
+    resizeObserver = new ResizeObserver(() => {
+      syncWebviewBounds()
+    })
+    resizeObserver.observe(webviewRef.value)
+  }
 })
 
+onUnmounted(() => {
+  if (resizeObserver) {
+    resizeObserver.disconnect()
+  }
+})
+
+// Component emits
+const emit = defineEmits<{
+  refresh: []
+  bookmark: []
+  menu: []
+  user: []
+}>()
+
+// Event handlers
+const handleRefresh = () => {
+  emit('refresh')
+}
+
+const handleBookmark = () => {
+  emit('bookmark')
+}
+
+const handleMenu = () => {
+  emit('menu')
+}
+
+const handleUser = () => {
+  emit('user')
+}
+
+// Expose methods to parent components
 defineExpose({
-  navigateToUrl,
-  currentUrl
+  refresh: handleRefresh,
+  bookmark: handleBookmark,
+  menu: handleMenu,
+  user: handleUser,
 })
 </script>
 
+<script lang="ts">
+// Import Lucide icons for global registration
+import { 
+  Lock, 
+  RotateCw, 
+  Star, 
+  MoreHorizontal, 
+  User 
+} from 'lucide-vue-next'
+
+// Component metadata
+export default {
+  name: 'BrowserChrome',
+  components: {
+    Lock,
+    RotateCw,
+    Star,
+    MoreHorizontal,
+    User,
+  }
+}
+</script>
+
 <style lang="less" scoped>
-.browser-chrome {
-  width: 100%;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background: #1c1c1e;
+// Window controls styling
+.window-control {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  
+  &.window-control-close {
+    background-color: #ff5f57;
+  }
+  
+  &.window-control-minimize {
+    background-color: #febc2e;
+  }
+  
+  &.window-control-maximize {
+    background-color: #28c840;
+  }
 }
 
-.browser-frame {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
-}
-
-.title-bar {
-  height: 52px;
-  display: flex;
-  align-items: center;
-  padding: 0 16px 0 80px; // Left padding for native traffic lights
-  gap: 16px;
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
+// Address bar styling
 .address-bar {
-  flex: 1;
-  display: flex;
-  align-items: center;
+  .address-input {
+    &::placeholder {
+      color: #6b6b6b;
+    }
+    
+    &:focus {
+      outline: none;
+    }
+  }
 }
 
-.address-input-wrapper {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  padding: 0 12px;
-  height: 32px;
-  transition: all 0.2s ease;
+// Animation classes for wave background
+@keyframes wave-slow {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes wave-medium {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-15px);
+  }
+}
+
+@keyframes wave-fast {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+.animate-wave-slow {
+  animation: wave-slow 8s ease-in-out infinite;
+}
+
+.animate-wave-medium {
+  animation: wave-medium 6s ease-in-out infinite;
+}
+
+.animate-wave-fast {
+  animation: wave-fast 4s ease-in-out infinite;
+}
+
+// Browser chrome specific styles
+.browser-chrome {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   
-  &:focus-within {
-    background: rgba(255, 255, 255, 0.12);
-    border-color: rgba(255, 255, 255, 0.2);
-  }
-}
-
-.address-input {
-  flex: 1;
-  background: transparent;
-  border: none;
-  outline: none;
-  color: white;
-  font-size: 14px;
-  
-  &::placeholder {
-    color: rgba(255, 255, 255, 0.4);
-  }
-}
-
-.navigate-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: transparent;
-  border: none;
-  color: rgba(255, 255, 255, 0.6);
-  cursor: pointer;
-  padding: 4px;
-  border-radius: 4px;
-  transition: all 0.15s ease;
-  
-  &:hover {
-    color: white;
-    background: rgba(255, 255, 255, 0.1);
-  }
-}
-
-.nav-controls {
-  display: flex;
-  gap: 4px;
-}
-
-.nav-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  background: transparent;
-  border: none;
-  color: rgba(255, 255, 255, 0.6);
-  cursor: pointer;
-  border-radius: 6px;
-  transition: all 0.15s ease;
-  
-  &:hover:not(:disabled) {
-    color: white;
-    background: rgba(255, 255, 255, 0.1);
-  }
-  
-  &:disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
-  }
-}
-
-.webview-container {
-  flex: 1;
-  background: white;
-  position: relative;
-}
-
-.webview {
-  width: 100%;
-  height: 100%;
-}
-
-.loading-bar {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: rgba(0, 122, 255, 0.2);
-  overflow: hidden;
-}
-
-.loading-progress {
-  width: 30%;
-  height: 100%;
-  background: #007aff;
-  animation: loading 1s ease-in-out infinite;
-}
-
-@keyframes loading {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(400%);
-  }
-}
-
-// Content area layout
-.content-area {
-  flex: 1;
-  display: flex;
-  overflow: hidden;
-  position: relative;
-}
-
-// AI Chat button
-.ai-btn {
-  color: #a78bfa;
-  
-  &:hover:not(:disabled) {
-    color: #c4b5fd;
-    background: rgba(167, 139, 250, 0.1);
-  }
-  
-  &.active {
-    color: #c4b5fd;
-    background: rgba(167, 139, 250, 0.2);
-  }
-}
-
-// Chat panel
-.chat-panel {
-  width: 380px;
-  background: rgba(28, 28, 30, 0.95);
-  backdrop-filter: blur(20px);
-  border-left: 1px solid rgba(255, 255, 255, 0.1);
-  display: flex;
-  flex-direction: column;
-}
-
-.chat-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.chat-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: #a78bfa;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.close-chat {
-  background: transparent;
-  border: none;
-  color: rgba(255, 255, 255, 0.5);
-  cursor: pointer;
-  padding: 4px;
-  border-radius: 4px;
-  transition: all 0.15s;
-  
-  &:hover {
-    color: white;
-    background: rgba(255, 255, 255, 0.1);
-  }
-}
-
-// API Warning
-.api-warning {
-  padding: 16px;
-  text-align: center;
-  
-  p {
-    color: rgba(255, 255, 255, 0.6);
-    font-size: 13px;
-    margin-bottom: 12px;
-  }
-  
-  .setup-btn {
-    padding: 8px 16px;
-    background: linear-gradient(135deg, rgba(147, 51, 234, 0.8), rgba(59, 130, 246, 0.8));
-    border: none;
-    border-radius: 6px;
-    color: white;
-    font-size: 13px;
-    cursor: pointer;
+  // Hover effects for interactive elements
+  .window-control {
+    transition: opacity 0.2s ease;
     
     &:hover {
-      transform: translateY(-1px);
+      opacity: 0.8;
+      cursor: pointer;
     }
   }
-}
-
-// Chat messages
-.chat-messages {
-  flex: 1;
-  overflow-y: auto;
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.message {
-  max-width: 90%;
-  padding: 12px 16px;
-  border-radius: 12px;
-  font-size: 13px;
-  line-height: 1.5;
   
-  &.user {
-    align-self: flex-end;
-    background: rgba(147, 51, 234, 0.2);
-    border: 1px solid rgba(147, 51, 234, 0.3);
-    color: white;
-  }
-  
-  &.model {
-    align-self: flex-start;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: rgba(255, 255, 255, 0.9);
-  }
-  
-  &.thinking {
-    background: transparent;
-    border: none;
-  }
-}
-
-.message-actions {
-  display: flex;
-  gap: 4px;
-  margin-top: 8px;
-}
-
-.action-tag {
-  padding: 2px 8px;
-  background: rgba(167, 139, 250, 0.2);
-  border-radius: 4px;
-  font-size: 10px;
-  color: #a78bfa;
-  text-transform: uppercase;
-}
-
-// Thinking animation
-.thinking-dots {
-  display: flex;
-  gap: 4px;
-  padding: 8px;
-  
-  span {
-    width: 8px;
-    height: 8px;
-    background: #a78bfa;
-    border-radius: 50%;
-    animation: bounce 1.4s ease-in-out infinite both;
+  // Icon hover effects
+  svg {
+    transition: color 0.2s ease;
     
-    &:nth-child(1) {
-      animation-delay: -0.32s;
-    }
-    &:nth-child(2) {
-      animation-delay: -0.16s;
+    &:hover {
+      color: #ffffff !important;
+      cursor: pointer;
     }
   }
-}
-
-@keyframes bounce {
-  0%, 80%, 100% {
-    transform: scale(0);
+  
+  // Address bar focus state
+  .address-bar {
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    
+    &:hover {
+      border-color: #3a3a3a;
+    }
+    
+    &:focus-within {
+      border-color: #007aff;
+      box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.2);
+    }
   }
-  40% {
-    transform: scale(1);
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .browser-chrome {
+    width: 95%;
+    height: 90vh;
+    
+    .address-bar {
+      max-width: 400px;
+    }
   }
 }
 
-// Chat input
-.chat-input-container {
-  padding: 12px 16px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-// Slide transition
-.slide-enter-active,
-.slide-leave-active {
-  transition: transform 0.3s ease;
-}
-
-.slide-enter-from,
-.slide-leave-to {
-  transform: translateX(100%);
-}
-
-// Fade transition
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.2s ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
-
-// Modal overlay
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
-}
-
-.modal-content {
-  background: transparent;
+@media (max-width: 480px) {
+  .browser-chrome {
+    .address-bar {
+      max-width: 300px;
+      padding: 2px;
+      
+      .address-input {
+        font-size: 12px;
+      }
+    }
+    
+    svg {
+      width: 16px;
+      height: 16px;
+    }
+  }
 }
 </style>

@@ -187,34 +187,71 @@ async fn gemini_chat(
     Ok(serde_json::json!({ "response": response, "actions": [] }))
 }
 
-/// Navigate to URL
-#[tauri::command]
-async fn navigate(
-    window: tauri::Window,
-    state: tauri::State<'_, BrowserState>,
-    url: String,
-) -> Result<String, String> {
-    let parsed_url = url::Url::parse(&url).map_err(|e| format!("Invalid URL: {}", e))?;
-    let window_id = window.label().to_string();
-    {
-        let mut windows = state.windows.lock().unwrap();
-        windows.insert(window_id.clone(), url.clone());
-    }
-    window.emit("navigate", url.clone()).map_err(|e: tauri::Error| e.to_string())?;
-    Ok(format!("Navigated to {}", parsed_url))
-}
-
-/// Create a new browser window (dummy for now to satisfy frontend)
+/// Create or update the browser webview in the main window
 #[tauri::command]
 async fn create_browser_window(
-    _window: tauri::Window,
-    _state: tauri::State<'_, BrowserState>,
+    handle: tauri::AppHandle,
     url: String,
-    title: String,
+    x: f64,
+    y: f64,
+    width: f64,
+    height: f64,
 ) -> Result<(), String> {
-    println!("Request to create browser window: {} ({})", title, url);
-    // In a real browser, this would create a new webview or window
+    let main_window = handle.get_webview_window("main").ok_or("Main window not found")?;
+    
+    // Check if webview already exists
+    if let Some(existing_webview) = handle.get_webview_window("browser") {
+        existing_webview.set_size(tauri::LogicalSize::new(width, height)).map_err(|e: tauri::Error| e.to_string())?;
+        existing_webview.set_position(tauri::LogicalPosition::new(x, y)).map_err(|e: tauri::Error| e.to_string())?;
+        return Ok(());
+    }
+
+    // Create a new webview window for the browser content
+    // In Tauri v2, if you want a child webview, you use WebviewBuilder on a Window
+    // But let's use WebviewWindow for simplicity if that's what handle supports easily
+    let _window = tauri::WebviewWindowBuilder::new(&handle, "browser", tauri::WebviewUrl::External(url.parse().map_err(|e: url::ParseError| format!("Invalid URL: {}", e))?))
+        .user_agent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36")
+        .build()
+        .map_err(|e: tauri::Error| e.to_string())?;
+    
+    // Position it
+    let _ = _window.set_size(tauri::LogicalSize::new(width, height));
+    let _ = _window.set_position(tauri::LogicalPosition::new(x, y));
+    
     Ok(())
+}
+
+/// Resize the browser webview
+#[tauri::command]
+async fn resize_browser(
+    handle: tauri::AppHandle,
+    _x: f64,
+    _y: f64,
+    width: f64,
+    height: f64,
+) -> Result<(), String> {
+    if let Some(webview) = handle.get_webview_window("browser") {
+        webview.set_size(tauri::LogicalSize::new(width, height)).map_err(|e: tauri::Error| e.to_string())?;
+        // For a separate window, we don't necessarily want to set position relative to screen the same way as container
+        // But for a child it would be different. Since v2 child webview API is complex, 
+        // we'll stick to WebviewWindow for now.
+    }
+    Ok(())
+}
+
+/// Navigate the browser webview to a new URL
+#[tauri::command]
+async fn navigate(
+    handle: tauri::AppHandle,
+    url: String,
+) -> Result<String, String> {
+    let parsed_url = url::Url::parse(&url).map_err(|e: url::ParseError| format!("Invalid URL: {}", e))?;
+    if let Some(webview) = handle.get_webview_window("browser") {
+        webview.navigate(parsed_url.clone()).map_err(|e: tauri::Error| e.to_string())?;
+    } else {
+        return Err("Browser window not found. Please initialize it first.".to_string());
+    }
+    Ok(format!("Navigated to {}", parsed_url))
 }
 
 fn main() {
@@ -231,7 +268,7 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             save_api_key, get_api_key, delete_api_key, has_api_key,
             initialize_gemini, gemini_chat,
-            navigate, create_browser_window,
+            navigate, create_browser_window, resize_browser,
         ])
         .setup(|app| {
             if let Some(main_window) = app.get_webview_window("main") {

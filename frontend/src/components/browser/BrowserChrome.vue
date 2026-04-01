@@ -96,10 +96,13 @@ const syncWebviewBounds = async () => {
   if (!webviewRef.value) return
   
   const rect = webviewRef.value.getBoundingClientRect()
+  const pos = await appWindow.outerPosition()
+  
   try {
+    // Convert Logical coordinates to Screen coordinates for the separate window
     await invoke('resize_browser', {
-      x: rect.x,
-      y: rect.y,
+      x: pos.x + rect.x,
+      y: pos.y + rect.y,
       width: rect.width,
       height: rect.height
     })
@@ -128,13 +131,14 @@ onMounted(async () => {
   
   if (webviewRef.value) {
     const rect = webviewRef.value.getBoundingClientRect()
+    const pos = await appWindow.outerPosition()
     
-    // Create initial browser window/webview
+    // Create initial browser window/webview with screen coordinates
     try {
       await invoke('create_browser_window', {
         url: props.url,
-        x: rect.x,
-        y: rect.y,
+        x: pos.x + rect.x,
+        y: pos.y + rect.y,
         width: rect.width,
         height: rect.height
       })

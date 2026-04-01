@@ -197,8 +197,6 @@ async fn create_browser_window(
     width: f64,
     height: f64,
 ) -> Result<(), String> {
-    let main_window = handle.get_webview_window("main").ok_or("Main window not found")?;
-    
     // Check if webview already exists
     if let Some(existing_webview) = handle.get_webview_window("browser") {
         existing_webview.set_size(tauri::LogicalSize::new(width, height)).map_err(|e: tauri::Error| e.to_string())?;
@@ -206,15 +204,14 @@ async fn create_browser_window(
         return Ok(());
     }
 
-    // Create a new webview window for the browser content
-    // In Tauri v2, if you want a child webview, you use WebviewBuilder on a Window
-    // But let's use WebviewWindow for simplicity if that's what handle supports easily
+    // Create a new child webview window for the browser content
     let _window = tauri::WebviewWindowBuilder::new(&handle, "browser", tauri::WebviewUrl::External(url.parse().map_err(|e: url::ParseError| format!("Invalid URL: {}", e))?))
         .user_agent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36")
         .build()
         .map_err(|e: tauri::Error| e.to_string())?;
     
-    // Position it
+    // Position it correctly relative to the parent window or screen?
+    // In a premium macOS app, we want it to be a CHILD.
     let _ = _window.set_size(tauri::LogicalSize::new(width, height));
     let _ = _window.set_position(tauri::LogicalPosition::new(x, y));
     
@@ -225,16 +222,14 @@ async fn create_browser_window(
 #[tauri::command]
 async fn resize_browser(
     handle: tauri::AppHandle,
-    _x: f64,
-    _y: f64,
+    x: f64,
+    y: f64,
     width: f64,
     height: f64,
 ) -> Result<(), String> {
     if let Some(webview) = handle.get_webview_window("browser") {
         webview.set_size(tauri::LogicalSize::new(width, height)).map_err(|e: tauri::Error| e.to_string())?;
-        // For a separate window, we don't necessarily want to set position relative to screen the same way as container
-        // But for a child it would be different. Since v2 child webview API is complex, 
-        // we'll stick to WebviewWindow for now.
+        webview.set_position(tauri::LogicalPosition::new(x, y)).map_err(|e: tauri::Error| e.to_string())?;
     }
     Ok(())
 }
@@ -249,7 +244,7 @@ async fn navigate(
     if let Some(webview) = handle.get_webview_window("browser") {
         webview.navigate(parsed_url.clone()).map_err(|e: tauri::Error| e.to_string())?;
     } else {
-        return Err("Browser window not found. Please initialize it first.".to_string());
+        return Err("Browser webview not found. Please initialize it first.".to_string());
     }
     Ok(format!("Navigated to {}", parsed_url))
 }

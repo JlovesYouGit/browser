@@ -1,0 +1,16 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Default permissions for Agentic Browser",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "shell:default",
+    "http:default",
+    "notification:default",
+    "os:default",
+    "process:default",
+    "clipboard-manager:allow-write-text",
+    "clipboard-manager:allow-read-text"
+  ]
+}

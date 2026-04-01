@@ -1,0 +1,23 @@
+{
+  "low": false,
+  "moderate": false,
+  "high": true,
+  "critical": true,
+  "report-type": "summary",
+  "allowlist": [
+    {
+      "id": 1234567,
+      "path": "package.json"
+    }
+  ],
+  "denylist": [],
+  "skip-dev": false,
+  "registry": "https://registry.npmjs.org/",
+  "report-format": ["text", "json"],
+  "output-dir": "audit-reports",
+  "package-manager": "npm",
+  "quiet": false,
+  "retry-count": 3,
+  "advisory-db": "https://github.com/nodejs/security-advisories",
+  "timeout": 60000
+}

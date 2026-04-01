@@ -1,0 +1,142 @@
+{
+  "name": "agentic-browser-frontend",
+  "version": "1.0.0",
+  "description": "Native macOS Vue.js application for agentic browser control",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "tauri:dev": "cd ../backend && cargo tauri dev",
+    "tauri:build": "cd ../backend && cargo tauri build",
+    "tauri:icon": "cd ../backend && cargo tauri icon",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest --coverage",
+    "test:integration": "vitest --config vitest.integration.config.ts",
+    "test:e2e": "playwright test",
+    "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix",
+    "lint:check": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "type-check": "vue-tsc --noEmit -p tsconfig.json --composite false",
+    "security:audit": "npm audit --audit-level=moderate",
+    "security:scan": "snyk test",
+    "quality:sonar": "sonar-scanner",
+    "pre-commit": "lint-staged",
+    "prepare": "husky install"
+  },
+  "dependencies": {
+    "@popperjs/core": "^2.11.8",
+    "@tauri-apps/api": "^2.0.0-beta",
+    "@tauri-apps/plugin-clipboard-manager": "^2.0.0-beta",
+    "@tauri-apps/plugin-http": "^2.0.0-beta",
+    "@tauri-apps/plugin-notification": "^2.0.0-beta",
+    "@tauri-apps/plugin-os": "^2.0.0-beta",
+    "@tauri-apps/plugin-process": "^2.0.0-beta",
+    "@tauri-apps/plugin-shell": "^2.0.0-beta",
+    "@vueuse/core": "^10.9.0",
+    "axios": "^1.6.0",
+    "canvas-confetti": "^1.9.4",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-vue-next": "^0.487.0",
+    "pinia": "^2.1.7",
+    "reka-ui": "^2.1.0",
+    "tailwind-merge": "^3.2.0",
+    "tw-animate-css": "^1.3.8",
+    "vue": "^3.4.0",
+    "vue-router": "^4.2.5",
+    "vue-sonner": "^2.0.3"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.12",
+    "@tauri-apps/cli": "^2.0.0-beta",
+    "@types/node": "^20.0.0",
+    "@vitejs/plugin-vue": "^5.0.0",
+    "@vitest/coverage-v8": "^4.1.2",
+    "@vitest/ui": "^4.1.2",
+    "@vue/eslint-config-prettier": "^9.0.0",
+    "@vue/eslint-config-typescript": "^13.0.0",
+    "@vue/test-utils": "^2.4.0",
+    "@vue/tsconfig": "^0.5.0",
+    "audit-ci": "^6.0.0",
+    "concurrently": "^8.0.0",
+    "eslint": "^8.57.0",
+    "eslint-plugin-vue": "^9.0.0",
+    "husky": "^8.0.0",
+    "jsdom": "^24.0.0",
+    "less": "^4.6.4",
+    "lint-staged": "^15.0.0",
+    "playwright": "^1.40.0",
+    "prettier": "^3.0.0",
+    "snyk": "^1.1200.0",
+    "sonar-scanner": "^3.0.0",
+    "tailwindcss": "^4.1.12",
+    "typescript": "^5.0.0",
+    "vite": "^6.3.5",
+    "vitest": "^3.2.4",
+    "vue-tsc": "^2.0.0",
+    "wait-on": "^7.0.0"
+  },
+  "peerDependencies": {
+    "vue": "^3.4.0"
+  },
+  "peerDependenciesMeta": {
+    "vue": {
+      "optional": false
+    }
+  },
+  "pnpm": {
+    "overrides": {
+      "vite": "^6.3.5",
+      "vue": "^3.4.0"
+    }
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/agentic-browser/frontend.git"
+  },
+  "keywords": [
+    "vue",
+    "vue3",
+    "typescript",
+    "tauri",
+    "browser",
+    "automation",
+    "agentic",
+    "macos",
+    "tailwindcss",
+    "vite",
+    "webkit"
+  ],
+  "author": "Agentic Browser Team",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/agentic-browser/frontend/issues"
+  },
+  "homepage": "https://github.com/agentic-browser/frontend#readme",
+  "files": [
+    "dist",
+    "src",
+    "types",
+    "README.md",
+    "LICENSE"
+  ],
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./style.css": {
+      "import": "./dist/style.css"
+    }
+  }
+}

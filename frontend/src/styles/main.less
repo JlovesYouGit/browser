@@ -1,0 +1,165 @@
+// Main styles for the Agentic Browser application
+
+@import './macos-variables.less';
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: @macos-font-family;
+  font-size: @macos-font-size-base;
+  line-height: 1.5;
+  color: #1d1d1f;
+  background-color: @macos-window-bg;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+// Global button styles
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: @spacing-sm @spacing-md;
+  border: none;
+  border-radius: @macos-border-radius;
+  font-family: @macos-font-family;
+  font-size: @macos-font-size-sm;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: @macos-transition;
+  
+  &.btn-primary {
+    background-color: @macos-blue;
+    color: white;
+    
+    &:hover {
+      background-color: darken(@macos-blue, 10%);
+    }
+    
+    &:active {
+      transform: scale(0.98);
+    }
+  }
+  
+  &.btn-secondary {
+    background-color: @macos-card-bg;
+    color: @macos-gray;
+    border: 1px solid @macos-border-color;
+    
+    &:hover {
+      background-color: @macos-sidebar-bg;
+    }
+  }
+  
+  &.btn-danger {
+    background-color: @macos-red;
+    color: white;
+    
+    &:hover {
+      background-color: darken(@macos-red, 10%);
+    }
+  }
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+// Card component styles
+.card {
+  background: @macos-card-bg;
+  border-radius: @macos-border-radius-lg;
+  box-shadow: @macos-shadow;
+  padding: @spacing-lg;
+  margin-bottom: @spacing-md;
+  
+  &:hover {
+    box-shadow: @macos-shadow-hover;
+  }
+}
+
+// Form input styles
+.form-input {
+  width: 100%;
+  padding: @spacing-sm @spacing-md;
+  border: 1px solid @macos-border-color;
+  border-radius: @macos-border-radius;
+  font-family: @macos-font-family;
+  font-size: @macos-font-size-base;
+  transition: @macos-transition;
+  
+  &:focus {
+    outline: none;
+    border-color: @macos-blue;
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+  }
+  
+  &::placeholder {
+    color: @macos-gray-light;
+  }
+}
+
+// Status indicator styles
+.status-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: @spacing-xs;
+  font-size: @macos-font-size-sm;
+  font-weight: 500;
+  
+  &::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+  
+  &.status-active::before {
+    background-color: @macos-green;
+  }
+  
+  &.status-inactive::before {
+    background-color: @macos-gray;
+  }
+  
+  &.status-error::before {
+    background-color: @macos-red;
+  }
+  
+  &.status-warning::before {
+    background-color: @macos-orange;
+  }
+}
+
+// Utility classes
+.text-center { text-align: center; }
+.text-left { text-align: left; }
+.text-right { text-align: right; }
+
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.items-center { align-items: center; }
+.justify-center { justify-content: center; }
+.justify-between { justify-content: space-between; }
+
+.hidden { display: none; }
+.visible { display: block; }
+
+// Responsive utilities
+@media (max-width: @breakpoint-md) {
+  .hide-mobile {
+    display: none;
+  }
+}
+
+@media (min-width: @breakpoint-md) {
+  .hide-desktop {
+    display: none;
+  }
+}

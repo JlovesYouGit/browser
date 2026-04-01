@@ -1,0 +1,37 @@
+[package]
+name = "agentic-browser"
+version = "1.0.0"
+description = "Native macOS agentic browser with Vue frontend and WebKit"
+authors = ["Agentic Browser Team"]
+license = "MIT"
+repository = "https://github.com/agentic-browser/agentic-browser"
+edition = "2021"
+rust-version = "1.70"
+
+[build-dependencies]
+tauri-build = { version = "2.0.0-beta", features = [] }
+
+[dependencies]
+tauri = { version = "2.0.0-beta", features = [] }
+tauri-plugin-shell = "2.0.0-beta"
+tauri-plugin-http = { version = "2.0.0-beta", features = ["native-tls-vendored"] }
+tauri-plugin-notification = "2.0.0-beta"
+tauri-plugin-os = "2.0.0-beta"
+tauri-plugin-process = "2.0.0-beta"
+tauri-plugin-clipboard-manager = "2.0.0-beta"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror = "1.0"
+url = "2.4"
+uuid = { version = "1.0", features = ["v4"] }
+reqwest = { version = "0.12", features = ["json"] }
+tokio = { version = "1", features = ["full"] }
+dotenvy = "0.15"
+keyring = "2.3"
+async-trait = "0.1"
+urlencoding = "2.1"
+
+[features]
+# this feature is used for production builds or when `devPath` points to the filesystem
+# DO NOT REMOVE!!
+custom-protocol = ["tauri/custom-protocol"]

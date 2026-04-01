@@ -1,0 +1,132 @@
+# Agent Specification Rules
+# Version: 1.0.0
+# Defines core agent behavior and constraints
+
+agent_rules:
+  # Agent Identity and Capabilities
+  identity:
+    name: "Agentic Browser"
+    version: "1.0.0"
+    type: "web_automation_agent"
+    capabilities:
+      - "web_crawling"
+      - "data_extraction"
+      - "browser_automation"
+      - "content_analysis"
+      - "decision_making"
+  
+  # Operational Constraints
+  constraints:
+    max_concurrent_sessions: 5
+    max_memory_per_session_mb: 512
+    max_execution_time_minutes: 30
+    max_crawl_depth: 3
+    rate_limit_requests_per_second: 1
+    
+  # Safety Protocols
+  safety:
+    require_human_approval_for:
+      - "financial_transactions"
+      - "personal_data_submission"
+      - "account_deletion"
+      - "system_modifications"
+    
+    automatic_rollback_on:
+      - "security_violation"
+      - "error_rate_above_10_percent"
+      - "memory_usage_above_90_percent"
+      - "blocked_by_rate_limit"
+    
+    logging_requirements:
+      log_all_actions: true
+      create_screenshots: true
+      maintain_audit_trail: true
+      performance_metrics: true
+
+# Skill Definitions
+skills:
+  web_crawling:
+    description: "Navigate and discover web content"
+    parameters:
+      max_depth: 3
+      respect_robots_txt: true
+      follow_external_links: false
+      delay_between_requests: 2
+    
+  data_extraction:
+    description: "Extract structured data from web content"
+    methods:
+      - "css_selectors"
+      - "xpath"
+      - "natural_language_processing"
+      - "computer_vision"
+    
+  browser_automation:
+    description: "Automate browser interactions"
+    supported_actions:
+      - "click"
+      - "form_fill"
+      - "scroll"
+      - "screenshot"
+      - "wait_for_element"
+    
+  content_analysis:
+    description: "Analyze and categorize web content"
+    analysis_types:
+      - "sentiment_analysis"
+      - "entity_recognition"
+      - "topic_classification"
+      - "quality_assessment"
+    
+  decision_making:
+    description: "Make intelligent routing and prioritization decisions"
+    decision_factors:
+      - "content_relevance"
+      - "domain_authority"
+      - "freshness"
+      - "user_intent"
+
+# Integration Points
+integrations:
+  storage:
+    - "local_filesystem"
+    - "database"
+    - "cloud_storage"
+  
+  apis:
+    - "search_engines"
+    - "content_delivery_networks"
+    - "analytics_services"
+  
+  monitoring:
+    - "performance_metrics"
+    - "error_tracking"
+    - "security_monitoring"
+
+# Quality Assurance
+quality_assurance:
+  testing:
+    unit_test_coverage: 90
+    integration_test_coverage: 80
+    performance_benchmarks: true
+    security_scanning: true
+  
+  validation:
+    data_quality_checks: true
+    rule_compliance_checks: true
+    performance_thresholds: true
+    error_rate_monitoring: true
+
+# Documentation Requirements
+documentation:
+  required:
+    - "api_documentation"
+    - "configuration_guide"
+    - "troubleshooting_guide"
+    - "security_policy"
+  
+  optional:
+    - "user_guide"
+    - "developer_tutorial"
+    - "best_practices"
+    - "case_studies"

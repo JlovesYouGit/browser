@@ -2,7 +2,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use tauri::{
-    Manager, WebviewUrl, WebviewWindowBuilder,
+    Manager, Emitter,
 };
 use std::sync::Arc;
 use std::collections::HashMap;
@@ -200,7 +200,7 @@ async fn navigate(
         let mut windows = state.windows.lock().unwrap();
         windows.insert(window_id.clone(), url.clone());
     }
-    window.emit("navigate", url.clone()).map_err(|e| e.to_string())?;
+    window.emit("navigate", url.clone()).map_err(|e: tauri::Error| e.to_string())?;
     Ok(format!("Navigated to {}", parsed_url))
 }
 
@@ -221,25 +221,13 @@ fn main() {
             navigate,
         ])
         .setup(|app| {
-            let main_window = WebviewWindowBuilder::new(
-                app,
-                "main",
-                WebviewUrl::App("index.html".into()),
-            )
-            .title("Agentic Browser")
-            .inner_size(1400.0, 900.0)
-            .min_inner_size(1000.0, 700.0)
-            .center()
-            .decorations(true)
-            .transparent(true)
-            .build()?;
-            
-            #[cfg(target_os = "macos")]
-            {
-                use tauri::TitleBarStyle;
-                main_window.set_title_bar_style(TitleBarStyle::Overlay);
+            if let Some(main_window) = app.get_webview_window("main") {
+                #[cfg(target_os = "macos")]
+                {
+                    use tauri::TitleBarStyle;
+                    let _ = main_window.set_title_bar_style(TitleBarStyle::Overlay);
+                }
             }
-            
             Ok(())
         })
         .run(tauri::generate_context!())

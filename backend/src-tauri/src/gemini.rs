@@ -4,7 +4,7 @@ use std::collections::HashMap;
 
 const GEMINI_API_BASE: &str = "https://generativelanguage.googleapis.com/v1beta/models";
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct GeminiClient {
     api_key: String,
 }
@@ -204,60 +204,62 @@ impl GeminiClient {
         tool_handlers: &mut HashMap<String, Box<dyn Fn(Value) -> Result<Value, String> + Send + Sync>>,
     ) -> Result<String, Box<dyn std::error::Error>> {
         let tools = Self::create_agentic_tools();
+        let mut current_messages = messages;
         
-        let request = GenerateContentRequest {
-            contents: messages,
-            tools: Some(tools),
-            generation_config: Some(GenerationConfig {
-                temperature: Some(0.7),
-                max_output_tokens: Some(2048),
-                top_p: Some(0.95),
-                top_k: Some(40),
-            }),
-        };
+        loop {
+            let request = GenerateContentRequest {
+                contents: current_messages.clone(),
+                tools: Some(tools.clone()),
+                generation_config: Some(GenerationConfig {
+                    temperature: Some(0.7),
+                    max_output_tokens: Some(2048),
+                    top_p: Some(0.95),
+                    top_k: Some(40),
+                }),
+            };
 
-        let response = self.generate_content("gemini-1.5-flash", request).await?;
-        
-        // Extract response text or handle function calls
-        if let Some(candidates) = response.candidates {
-            if let Some(candidate) = candidates.first() {
-                let content = &candidate.content;
-                
-                // Check for function calls
-                for part in &content.parts {
-                    if let Some(function_call) = &part.function_call {
-                        // Execute the function
-                        if let Some(handler) = tool_handlers.get(&function_call.name) {
-                            let result = handler(function_call.args.clone())?;
-                            
-                            // Continue conversation with function response
-                            let mut new_messages = messages.clone();
-                            new_messages.push(content.clone());
-                            new_messages.push(Content {
-                                role: Role::User,
-                                parts: vec![Part {
-                                    text: None,
-                                    function_call: None,
-                                    function_response: Some(FunctionResponse {
-                                        name: function_call.name.clone(),
-                                        response: result,
-                                    }),
-                                }],
-                            });
-                            
-                            // Recursive call with function result
-                            return self.chat_with_agentic_tools(new_messages, tool_handlers).await;
+            let response = self.generate_content("gemini-1.5-flash", request).await?;
+            
+            if let Some(candidates) = response.candidates {
+                if let Some(candidate) = candidates.first() {
+                    let content = &candidate.content;
+                    
+                    let mut tool_used = false;
+                    for part in &content.parts {
+                        if let Some(function_call) = &part.function_call {
+                            if let Some(handler) = tool_handlers.get(&function_call.name) {
+                                let result = handler(function_call.args.clone())?;
+                                
+                                current_messages.push(content.clone());
+                                current_messages.push(Content {
+                                    role: Role::User,
+                                    parts: vec![Part {
+                                        text: None,
+                                        function_call: None,
+                                        function_response: Some(FunctionResponse {
+                                            name: function_call.name.clone(),
+                                            response: result,
+                                        }),
+                                    }],
+                                });
+                                tool_used = true;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    if tool_used {
+                        continue;
+                    }
+                    
+                    for part in &content.parts {
+                        if let Some(text) = &part.text {
+                            return Ok(text.clone());
                         }
                     }
                 }
-                
-                // Return text response
-                for part in &content.parts {
-                    if let Some(text) = &part.text {
-                        return Ok(text.clone());
-                    }
-                }
             }
+            break;
         }
         
         Ok("No response from Gemini".to_string())

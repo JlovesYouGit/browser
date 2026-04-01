@@ -13,6 +13,8 @@
     "withGlobalTauri": true,
     "windows": [
       {
+        "label": "main",
+        "url": "index.html",
         "title": "Agentic Browser",
         "width": 1400,
         "height": 900,

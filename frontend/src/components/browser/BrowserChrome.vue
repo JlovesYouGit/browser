@@ -4,12 +4,6 @@
     <div class="browser-frame">
       <!-- Title bar with traffic lights -->
       <div class="title-bar">
-        <div class="traffic-lights">
-          <button class="traffic-light close" @click="onClose" />
-          <button class="traffic-light minimize" @click="onMinimize" />
-          <button class="traffic-light maximize" @click="onMaximize" />
-        </div>
-        
         <!-- Address Bar -->
         <div class="address-bar">
           <div class="address-input-wrapper">
@@ -345,49 +339,11 @@ defineExpose({
   height: 52px;
   display: flex;
   align-items: center;
-  padding: 0 16px;
+  padding: 0 16px 0 80px; // Left padding for native traffic lights
   gap: 16px;
   background: rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(20px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.traffic-lights {
-  display: flex;
-  gap: 8px;
-}
-
-.traffic-light {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  border: none;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  
-  &.close {
-    background: #ff5f57;
-    &:hover {
-      background: #ff3b30;
-      transform: scale(1.1);
-    }
-  }
-  
-  &.minimize {
-    background: #ffbd2e;
-    &:hover {
-      background: #ff9500;
-      transform: scale(1.1);
-    }
-  }
-  
-  &.maximize {
-    background: #28ca42;
-    &:hover {
-      background: #30d158;
-      transform: scale(1.1);
-    }
-  }
 }
 
 .address-bar {

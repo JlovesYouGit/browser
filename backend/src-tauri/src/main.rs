@@ -204,6 +204,19 @@ async fn navigate(
     Ok(format!("Navigated to {}", parsed_url))
 }
 
+/// Create a new browser window (dummy for now to satisfy frontend)
+#[tauri::command]
+async fn create_browser_window(
+    _window: tauri::Window,
+    _state: tauri::State<'_, BrowserState>,
+    url: String,
+    title: String,
+) -> Result<(), String> {
+    println!("Request to create browser window: {} ({})", title, url);
+    // In a real browser, this would create a new webview or window
+    Ok(())
+}
+
 fn main() {
     dotenvy::dotenv().ok();
     
@@ -218,7 +231,7 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             save_api_key, get_api_key, delete_api_key, has_api_key,
             initialize_gemini, gemini_chat,
-            navigate,
+            navigate, create_browser_window,
         ])
         .setup(|app| {
             if let Some(main_window) = app.get_webview_window("main") {
